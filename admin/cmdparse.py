@@ -1,51 +1,64 @@
 import re
 
-command_descriptions = []
 
+class CommandParser(object):
+    def __init__(self, alias={}):
+        self.command_descriptions = []
+        self.alias = alias
 
-class Namespace(object):
+    def register(self, *args, **kwargs):
+        """
+        Generate a @decorator to register a command argument pattern.
 
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+        :rtype: @decorator
+        """
 
+        def prepare(function):
+            pattern = kwargs.get('pattern', args[0])
+            alias = kwargs.get('alias', self.alias)
+            doc = kwargs.get('doc', function.__doc__)
 
-def register(pattern, alias={}):
-    """
-    Generate a @decorator to register a command argument pattern.
+            self.__pattern = pattern  # 21
 
-    :rtype: @decorator
-    """
-    def decorator(function):
+            for key, value in alias.items():
+                self.__pattern = self.__pattern.replace(key, value)  # 21
+            regex = re.compile(self.__pattern)
+            info = (pattern, regex, function, doc)
+            self.command_descriptions.append(info)  # 47
+            del self.__pattern  # 21
 
-        local = Namespace(pattern=pattern)
+        try:
+            function = kwargs['function']
+        except KeyError:
 
-        for key, value in alias.items():
-            local.pattern = local.pattern.replace(key, value)
-        regex = re.compile(local.pattern)
-        info = (pattern, regex, function, function.__doc__)
-        command_descriptions.append(info)  # 47
-        return function
+            def decorator(wrapped):
+                prepare(wrapped)
+                return wrapped
 
-    return decorator
+            return decorator
 
+        else:
+            prepare(function)
 
-def process(command):
-    for pattern, regex, function, doc in command_descriptions:  # 47
-        match = regex.match(command)
-        if match:
-            return function(match)
+    def parse(self, command):
+        for pattern, regex, function, doc in self.command_descriptions:  # 47
+            match = regex.match(command)
+            if match:
+                def task():
+                    return function(*match.groups(), **match.groupdict())
 
-    raise ValueError('no matching command found')
+                return task
 
+        raise ValueError('no matching command found')
 
-def help():
-    width = 0
-    commands = []
+    def help(self):
+        width = 0
+        commands = []
 
-    for pattern, regex, function, doc in command_descriptions:  # 47
-        string = pattern.lstrip('^').rstrip('$')
-        command = re.sub('\((\w+)\)', '<\\1>', string)
-        commands.append((command, doc))
-        width = max(len(command), width)
+        for pattern, regex, function, doc in self.command_descriptions:  # 47
+            string = pattern.lstrip('^').rstrip('$')
+            command = re.sub('\((\w+)\)', '<\\1>', string)
+            commands.append((command, doc))
+            width = max(len(command), width)
 
-    return "\n".join(["%-*s  -- %s" % (width, command, doc) for command, doc in commands])
+        return "\n".join(["%-*s  -- %s" % (width, command, doc) for command, doc in commands])

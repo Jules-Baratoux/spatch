@@ -3,15 +3,27 @@ import sys
 
 from admin import commands
 
+
+def usage():
+    name = os.path.basename(sys.path[0])
+    return """
+usage:
+    %s <command>
+
+commands:
+%s
+    """ % (name, "\n".join("\t%s" % line for line in commands.help().split('\n')))
+
+
 def main():
     commands_line = ' '.join(sys.argv[1:])
-    name = os.path.basename(sys.path[0])
 
     try:
-        commands.parse(commands_line)
+        task = commands.parse(commands_line)
     except ValueError:
-        print "usage: %s <command>\n\ncommands:\n%s" % (
-        name, "\n".join("\t%s" % line for line in commands.help().split('\n')))
+        print usage()
+    else:
+        task()
 
 
 if __name__ == '__main__':

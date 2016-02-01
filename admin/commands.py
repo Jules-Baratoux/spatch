@@ -1,7 +1,7 @@
 import database
-from admin import cmdparse
+from admin.cmdparse import CommandParser
 
-alias = {
+parser = CommandParser(alias={
     'hostname': '(?:\w+)',
     'username': '(?:\w+)',
     'new': '(?:add|new)',
@@ -10,48 +10,48 @@ alias = {
     'revoke': '(?:deny|revoke|remove|rm|delete|del)',
     'to': '(?:to|on)',
     'from': '(?:from|on)',
-}
+})
 
 
-@cmdparse.register(pattern="^new server (hostname)$", alias=alias)
-def new_server(match):
+@parser.register("^new server (hostname)$")
+def new_server(hostname):
     """create a new server by name"""
-    return database.add_server(*match.groups())
+    return database.add_server(hostname)
 
 
-@cmdparse.register(pattern="^delete server (hostname)$", alias=alias)
-def delete_server(match):
+@parser.register("^delete server (hostname)$")
+def delete_server(hostname):
     """delete an existing server by name"""
-    return database.remove_server(*match.groups())
+    return database.remove_server(hostname)
 
 
-@cmdparse.register(pattern="^new user (username)$", alias=alias)
-def new_user(match):
+@parser.register("^new user (username)$")
+def new_user(username):
     """create a new user by name"""
-    return database.add_user(*match.groups())
+    return database.add_user(username)
 
 
-@cmdparse.register(pattern="^delete user (username)$", alias=alias)
-def delete_user(match):
+@parser.register("^delete user (username)$")
+def delete_user(username):
     """delete an existing user by name"""
-    return database.remove_user(*match.groups())
+    return database.remove_user(username)
 
 
-@cmdparse.register(pattern="^grant (username) to (hostname)$", alias=alias)
-def grant_access(match):
+@parser.register("^grant (username) to (hostname)$")
+def grant_access(username, hostname):
     """grant access to a user on an existing server"""
-    return database.grant_access(*match.groups())
+    return database.grant_access(username, hostname)
 
 
-@cmdparse.register(pattern="^revoke (username) from (hostname)$", alias=alias)
-def revoke_access(match):
+@parser.register("^revoke (username) from (hostname)$")
+def revoke_access(username, hostname):
     """revoke access to a user from an existing server"""
-    return database.revoke_access(*match.groups())
+    return database.revoke_access(username, hostname)
 
 
 def parse(command):
-    return cmdparse.process(command)
+    return parser.parse(command)
 
 
 def help():
-    return cmdparse.help()
+    return parser.help()
