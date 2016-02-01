@@ -6,7 +6,7 @@ def access_granted(username, hostname):
     """
     assert isinstance(username, str)
     assert isinstance(hostname, str)
-    raise NotImplementedError("access_granted(%r,%r) is not implemented" % (username, hostname))
+    raise NotImplementedError("access_granted(%r,%r)" % (username, hostname))
 
 
 def add_server(hostname):
@@ -14,7 +14,7 @@ def add_server(hostname):
     :param hostname: the server's hostname
     """
     assert isinstance(hostname, str)
-    raise NotImplementedError("add_server(%r) is not implemented" % (hostname))
+    raise NotImplementedError("add_server(%r)" % (hostname))
 
 
 def remove_server(hostname):
@@ -22,7 +22,7 @@ def remove_server(hostname):
     :param hostname: the server's hostname
     """
     assert isinstance(hostname, str)
-    raise NotImplementedError("remove_server(%r) is not implemented" % (hostname))
+    raise NotImplementedError("remove_server(%r)" % (hostname))
 
 
 def add_user(username):
@@ -30,7 +30,7 @@ def add_user(username):
     :param username: the user's name
     """
     assert isinstance(username, str)
-    raise NotImplementedError("add_user(%r) is not implemented" % (username))
+    raise NotImplementedError("add_user(%r)" % (username))
 
 
 def remove_user(username):
@@ -38,7 +38,7 @@ def remove_user(username):
     :param username: the user's name
     """
     assert isinstance(username, str)
-    raise NotImplementedError("remove_user(%r) is not implemented" % (username))
+    raise NotImplementedError("remove_user(%r)" % (username))
 
 
 def grant_access(username, hostname):
@@ -48,7 +48,7 @@ def grant_access(username, hostname):
     """
     assert isinstance(username, str)
     assert isinstance(hostname, str)
-    raise NotImplementedError("grant_access(%r, %r) is not implemented" % (username, hostname))
+    raise NotImplementedError("grant_access(%r, %r)" % (username, hostname))
 
 
 def revoke_access(username, hostname):
@@ -58,4 +58,4 @@ def revoke_access(username, hostname):
     """
     assert isinstance(username, str)
     assert isinstance(hostname, str)
-    raise NotImplementedError("revoke_access(%r, %r) is not implemented" % (username, hostname))
+    raise NotImplementedError("revoke_access(%r, %r)" % (username, hostname))

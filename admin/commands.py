@@ -1,51 +1,57 @@
-import re
+import database
+from admin import cmdparse
 
-command_descriptions = []
-
-
-class Namespace(object):
-
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-
-def register(pattern, alias={}):
-    """
-    Generate a @decorator to register a command argument pattern.
-
-    :rtype: @decorator
-    """
-    def decorator(function):
-
-        local = Namespace(pattern=pattern)
-
-        for key, value in alias.items():
-            local.pattern = local.pattern.replace(key, value)
-        regex = re.compile(local.pattern)
-        info = (pattern, regex, function, function.__doc__)
-        command_descriptions.append(info)  # 47
-        return function
-
-    return decorator
+alias = {
+    'hostname': '(?:\w+)',
+    'username': '(?:\w+)',
+    'new': '(?:add|new)',
+    'delete': '(?:delete|del|remove|rm)',
+    'grant': '(?:allow|grant|add)',
+    'revoke': '(?:deny|revoke|remove|rm|delete|del)',
+    'to': '(?:to|on)',
+    'from': '(?:from|on)',
+}
 
 
-def process(command):
-    for pattern, regex, function, doc in command_descriptions:  # 47
-        match = regex.match(command)
-        if match:
-            return function(match)
+@cmdparse.register(pattern="^new server (hostname)$", alias=alias)
+def new_server(match):
+    """create a new server by name"""
+    return database.add_server(*match.groups())
 
-    raise ValueError('no matching command found')
+
+@cmdparse.register(pattern="^delete server (hostname)$", alias=alias)
+def delete_server(match):
+    """delete an existing server by name"""
+    return database.remove_server(*match.groups())
+
+
+@cmdparse.register(pattern="^new user (username)$", alias=alias)
+def new_user(match):
+    """create a new user by name"""
+    return database.add_user(*match.groups())
+
+
+@cmdparse.register(pattern="^delete user (username)$", alias=alias)
+def delete_user(match):
+    """delete an existing user by name"""
+    return database.remove_user(*match.groups())
+
+
+@cmdparse.register(pattern="^grant (username) to (hostname)$", alias=alias)
+def grant_access(match):
+    """grant access to a user on an existing server"""
+    return database.grant_access(*match.groups())
+
+
+@cmdparse.register(pattern="^revoke (username) from (hostname)$", alias=alias)
+def revoke_access(match):
+    """revoke access to a user from an existing server"""
+    return database.revoke_access(*match.groups())
+
+
+def parse(command):
+    return cmdparse.process(command)
 
 
 def help():
-    width = 0
-    commands = []
-
-    for pattern, regex, function, doc in command_descriptions:  # 47
-        string = pattern.lstrip('^').rstrip('$')
-        command = re.sub('\((\w+)\)', '<\\1>', string)
-        commands.append((command, doc))
-        width = max(len(command), width)
-
-    return "\n".join(["%-*s  -- %s" % (width, command, doc) for command, doc in commands])
+    return cmdparse.help()
