@@ -1,28 +1,56 @@
 
+import syslog
+
+
+INFO = """
+Welcome to Splatch!\n
+Select a server to connect to..\n
+
+\t1)developer (10.0.0.3)
+\t2)sales (10.0.0.2)
+\t3)admin (10.0.0.1)
+
+"""
+
+
 def prompt_password(pamh, pwd_prompt="Password:"):
     pass
 
 
 def prompt_info(pamh, info):
-    message = pamh.Message(pamh.PAM_TEXT_INFO,
-                           "Welcome to Splatch!\n Please select a server:\n")
     try:
+        message = pamh.Message(pamh.PAM_TEXT_INFO, info)
         resp = pamh.conversation(message)
     except pamh.exception as e:
         return e.pam_result
     return resp
 
 
-def prompt_message(pamh, info):
-    pass
+def parse_server_selection(response):
+    
+    if int(response) > 0 and int(response) < 3:
+        return response
+    raise Exception("invalid response")
 
 
+def prompt_message(pamh, prompt, parse_func):
+    
+    try:
+        message = pamh.Message(pamh.PAM_PROMPT_ECHO_ON, prompt)
+        resp = pamh.conversation(message)
+        return parse_func(resp)
+    except pamh.exception as e:
+        return e.pam_result
+
+    
 def pam_sm_authenticate(pamh, flags, argv):
     try:
         user = pamh.get_user(None)
         # open db to check if user exists
         # if user_exists == false
-        prompt_info(pamh, "")
+        prompt_info(pamh, INFO)
+        selection = prompt_message(pamh, "Server: ")
+        syslog.syslog(str(selection))
         if user == "splatch":
             return pamh.PAM_SUCCESS
     except pamh.exception, e:
