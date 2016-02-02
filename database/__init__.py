@@ -31,7 +31,7 @@ filename = path.dirname(__file__) + '.db'
 cache = Cache(filename, flag='c')
 
 
-def do(table, method, message, contains, name, *args):
+def call(method, table, message, contains, name, *args):
     try:
         tmp = cache[table]
     except KeyError:
@@ -45,19 +45,19 @@ def do(table, method, message, contains, name, *args):
 
 
 def create(table, name, value):
-    do(table, '__setitem__', "%r already exists" % name, False, name, value)
+    call('__setitem__', table, "%r already exists" % name, False, name, value)
 
 
 def delete(table, name):
-    do(table, '__delitem__', "%r does not exists" % name, True, name)
+    call('__delitem__', table, "%r does not exists" % name, True, name)
 
 
 def get(table, name):
-    return do(table, '__getitem__', "%r does not exists" % name, True, name)
+    return call('__getitem__', table, "%r does not exists" % name, True, name)
 
 
 def update(table, name, value):
-    do(table, '__setitem__', "%r does not exists" % name, True, name, value)
+    call('__setitem__', table, "%r does not exists" % name, True, name, value)
 
 
 def add_server(hostname):
