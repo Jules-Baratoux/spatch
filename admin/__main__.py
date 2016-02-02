@@ -12,7 +12,7 @@ usage:
 
 commands:
 %s
-    """ % (name, "\n".join("\t%s" % line for line in commands.help().split('\n')))
+    """ % (name, "\n".join("    %s" % line for line in commands.help().split('\n')))
 
 
 def main():
