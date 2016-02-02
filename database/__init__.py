@@ -60,36 +60,36 @@ def update(table, name, value):
     call('__setitem__', table, "%r does not exists" % name, True, name, value)
 
 
-def add_server(hostname):
+def new_server(hostname):
     """ Add a server by hostname
     :param hostname: the server's hostname
     """
     create('servers', hostname, {})
-    print "add_server(%r)" % hostname
+    # print "new_server(%r)" % hostname
 
 
-def remove_server(hostname):
+def delete_server(hostname):
     """ Remove a server by hostname
     :param hostname: the server's hostname
     """
     delete('servers', hostname)
-    print "remove_server(%r)" % hostname
+    # print "delete_server(%r)" % hostname
 
 
-def add_user(username):
+def new_user(username):
     """ Add a user by name
     :param username: the user's name
     """
     create('users', username, {})
-    print "add_user(%r)" % username
+    # print "new_user(%r)" % username
 
 
-def remove_user(username):
+def delete_user(username):
     """ Remove a user by name
     :param username: the user's name
     """
     delete('users', username)
-    print "remove_user(%r)" % username
+    # print "delete_user(%r)" % username
 
 
 def grant_access(username, hostname):
@@ -102,7 +102,7 @@ def grant_access(username, hostname):
     server = get('servers', hostname)
     server[username] = True
     update('servers', hostname, server)
-    print "grant_access(%r, %r)" % (username, hostname)
+    # print "grant_access(%r, %r)" % (username, hostname)
 
 
 def revoke_access(username, hostname):
@@ -115,7 +115,7 @@ def revoke_access(username, hostname):
     server = get('servers', hostname)
     server[username] = False
     update('servers', hostname, server)
-    print "revoke_access(%r, %r)" % (username, hostname)
+    # print "revoke_access(%r, %r)" % (username, hostname)
 
 
 def access_granted(username, hostname):
@@ -131,5 +131,5 @@ def access_granted(username, hostname):
         result = server[username] == True
     except KeyError:
         result = False
-    print "access_granted(%r,%r) -> %s" % (username, hostname, result)
+    # print "access_granted(%r,%r) -> %s" % (username, hostname, result)
     return result
