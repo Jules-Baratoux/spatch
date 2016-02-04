@@ -6,13 +6,11 @@ from admin import commands
 
 def usage():
     name = os.path.basename(sys.path[0])
-    return """
-usage:
+    return """usage:
     %s <command>
 
 commands:
-%s
-    """ % (name, "\n".join("    %s" % line for line in commands.help().split('\n')))
+%s""" % (name, "\n".join("    %s" % line for line in commands.help().split('\n')))
 
 
 def main():
