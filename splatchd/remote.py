@@ -9,14 +9,12 @@ DEFAULT_KEY_PATH = "./keys/splatch"
 
 
 class RemoteSSHClient(object):
-
-    USERNAME = 'splatch'
     
-    def __init__(self, username, rhost, rport):
+    def __init__(self, username, raddress):
 
         self._active = False
-        self._remote_host = rhost
-        self._remote_port = rport
+        self._remote_host = raddress[0]
+        self._remote_port = raddress[1]
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -39,8 +37,6 @@ class RemoteSSHClient(object):
             self._active = False
         except Exception as e:
             print e
-            # print e
-            # raise e
         
     @classmethod
     def is_known(cls, key):
@@ -66,10 +62,6 @@ class RemoteSSHClient(object):
     def start_session(self):
         channel = self._transport.open_session()
         return channel
-
-    # def __del__(self):
-    #     print "closing connection"
-    #     self._transport.close()
 
 
 REMOTE_HOST_ADDRESS = list([
