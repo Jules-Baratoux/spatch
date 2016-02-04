@@ -1,8 +1,9 @@
 Feature: ctrl script
 
     Background:
-        Given a username
-          And a hostname
+        Given a username public key pair
+          And a hostname port pair
+          And an alias
           And the database is reset
 
 

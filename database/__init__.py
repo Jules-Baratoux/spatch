@@ -2,6 +2,10 @@ import shelve
 
 from os import path
 
+from splatchd.models import User
+
+from splatchd.models import Server
+
 
 class Cache(object):
     def __init__(self, *args, **kwargs):
@@ -44,27 +48,28 @@ def call(method, table, message, contains, name, *args):
     return result
 
 
-def create(table, name, value):
+def _create(table, name, value):
     call('__setitem__', table, "%r already exists" % name, False, name, value)
 
 
-def delete(table, name):
+def _delete(table, name):
     call('__delitem__', table, "%r does not exists" % name, True, name)
 
 
-def get(table, name):
+def _get(table, name):
     return call('__getitem__', table, "%r does not exists" % name, True, name)
 
 
-def update(table, name, value):
+def _update(table, name, value):
     call('__setitem__', table, "%r does not exists" % name, True, name, value)
 
 
-def new_server(hostname):
+def new_server(hostname, port):
     """ Add a server by hostname
     :param hostname: the server's hostname
     """
-    create('servers', hostname, {})
+    server = Server(hostname, port)
+    _create('servers', hostname, server)
     # print "new_server(%r)" % hostname
 
 
@@ -72,15 +77,16 @@ def delete_server(hostname):
     """ Remove a server by hostname
     :param hostname: the server's hostname
     """
-    delete('servers', hostname)
+    _delete('servers', hostname)
     # print "delete_server(%r)" % hostname
 
 
-def new_user(username):
+def new_user(username, public_key_filename):
     """ Add a user by name
     :param username: the user's name
     """
-    create('users', username, {})
+    user = User(username, public_key_filename)
+    _create('users', username, user)
     # print "new_user(%r)" % username
 
 
@@ -88,20 +94,21 @@ def delete_user(username):
     """ Remove a user by name
     :param username: the user's name
     """
-    delete('users', username)
+    _delete('users', username)
     # print "delete_user(%r)" % username
 
 
-def grant_access(username, hostname):
+def grant_access(username, hostname, alias):
     """ Grant access to a user on a server
     :param username: the user's name
     :param hostname: the server's hostname
+    :param alias: the username used on the server
     """
     assert isinstance(username, str)
     assert isinstance(hostname, str)
-    server = get('servers', hostname)
-    server[username] = True
-    update('servers', hostname, server)
+    server = _get('servers', hostname)
+    server.alias_by_username[username] = alias
+    _update('servers', hostname, server)
     # print "grant_access(%r, %r)" % (username, hostname)
 
 
@@ -112,9 +119,9 @@ def revoke_access(username, hostname):
     """
     assert isinstance(username, str)
     assert isinstance(hostname, str)
-    server = get('servers', hostname)
+    server = _get('servers', hostname)
     server[username] = False
-    update('servers', hostname, server)
+    _update('servers', hostname, server)
     # print "revoke_access(%r, %r)" % (username, hostname)
 
 
@@ -122,14 +129,13 @@ def access_granted(username, hostname):
     """ Returns whether a user has access to a server or not
     :param username: the user's name
     :param hostname: the server's hostname
-    :return: True or False
+    :return: str if granted else None
     """
     assert isinstance(username, str)
     assert isinstance(hostname, str)
-    server = get('servers', hostname)
+    server = _get('servers', hostname)
     try:
-        result = server[username] == True
+        return server.alias_by_username[username]
     except KeyError:
-        result = False
+        return None
     # print "access_granted(%r,%r) -> %s" % (username, hostname, result)
-    return result

@@ -2,59 +2,70 @@
 import os
 
 from behave import *
-import admin
+import splatch as admin
 
 
 def python(command):
-    return os.system('python ' + command)
+    return os.system('python %s' % command)
 
 
-@given('the admin script')
+def script(command):
+    return python("%s %s" % (os.path.dirname(admin.__file__), command))
+
+
+@given('a username public key pair')
 def step_impl(context):
-    context.script_filename = admin.__file__
+    context.username = 'user%i' % id(context)
+    context.pubkey = 'pub%i' % id(context)
 
 
-@given('a username')
+@given('an alias')
 def step_impl(context):
-    context.username = 'jules'
+    context.alias = 'alias%i' % id(context)
 
 
-@given('a hostname')
+@given('a hostname port pair')
 def step_impl(context):
-    context.hostname = 'server42'
+    context.hostname = 'server%i' % id(context)
+    context.port = '%s' % str(id(context))[:4]
 
 
 @given('the server exists')
 def step_impl(context):
-    python('admin new server %s' % context.hostname)
+    script('new server %s' % context.hostname)
 
 
 @given('the database is reset')
 def step_impl(context):
     import database
-    os.system('rm "%s"' % database.filename)
+    os.system('rm --force "%s"' % database.filename)
 
 
 @given('the user exists')
 def step_impl(context):
-    python('admin new user %s' % context.username)
+    script('new user %s %s' % (context.username, context.pubkey))
 
 
 @when('I grant the user access to the server')
-def step_impl(context):
-    python('admin grant %s access to %s' % (context.username, context.hostname))
+def grant_access(context):
+    script('grant %s access to %s as %s' % (context.username, context.hostname, context.alias))
 
 
 @then('the user has access to the server')
 def step_impl(context):
-    assert python('admin has %s access to %s' % (context.username, context.hostname)) == 0
+    assert script('has %s access to %s' % (context.username, context.hostname)) == 0
+
+
+@given('the user has access to the server')
+def step_impl(context):
+    grant_access(context)
 
 
 @then('the user does not have access to the server')
 def step_impl(context):
-    assert python('admin has %s access to %s' % (context.username, context.hostname)) == 1
+    assert script('has %s access to %s' % (context.username, context.hostname)) == 1
 
 
 @when('I revoke the user access from the server')
 def step_impl(context):
-    python('admin revoke %s access from %s' % (context.username, context.hostname))
+    script('revoke %s access from %s' % (context.username, context.hostname))

@@ -3,7 +3,10 @@ from admin.cmdparse import CommandParser
 
 commands = CommandParser(alias={
     'hostname': '(?:\w+)',
+    'alias':    '(?:\w+)',
+    'filename': '(?:[\w\\/:.-_0-9]+)',
     'username': '(?:\w+)',
+    'port':     '(?:[0-9]+)',
     'new':      '(?:add|new)',
     'delete':   '(?:delete|del|remove|rm)',
     'grant':    '(?:allow|grant|add)',
@@ -12,11 +15,10 @@ commands = CommandParser(alias={
     'from':     '(?:from|on)',
 })
 
-
-@commands.register("^new server (hostname)$")
-def new_server(hostname):
-    """create a new server by name"""
-    return database.new_server(hostname)
+@commands.register("^new server (hostname) (port)$")
+def new_server(hostname, port):
+    """create a new server by name and port"""
+    return database.new_server(hostname, port)
 
 
 @commands.register("^delete server (hostname)$")
@@ -25,9 +27,9 @@ def delete_server(hostname):
     return database.delete_server(hostname)
 
 
-@commands.register("^new user (username)$")
+@commands.register("^new user (username) (filename)$")
 def new_user(username):
-    """create a new user by name"""
+    """create a new user by name and public key filename"""
     return database.new_user(username)
 
 
@@ -37,10 +39,10 @@ def delete_user(username):
     return database.delete_user(username)
 
 
-@commands.register("^grant (username) access to (hostname)$")
-def grant_access(username, hostname):
-    """grant access to a user on an existing server"""
-    return database.grant_access(username, hostname)
+@commands.register("^grant (username) access to (hostname) as (alias)$")
+def grant_access(username, hostname, alias):
+    """grant access to a user on an existing server as a remote user (alias)"""
+    return database.grant_access(username, hostname, alias)
 
 
 @commands.register("^revoke (username) access from (hostname)$")

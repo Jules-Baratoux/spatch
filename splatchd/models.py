@@ -1,18 +1,13 @@
-
-import paramiko
-
-
-class Client(object):
+class User(object):
     
-    def __init__(self, username, public_key_file):
+    def __init__(self, username, public_key_filename):
         self.username = username
-        self.public_key = paramiko.RSAKey(filename=public_key_file)
+        self.public_key_filename = public_key_filename
 
 
-class RemoteHost(object):
+class Server(object):
 
-    def __init__(self, hostname, username, port):
+    def __init__(self, hostname, port):
         self.hostname = hostname
-        self.username = username
         self.port = port
-
+        self.alias_by_username = {}
