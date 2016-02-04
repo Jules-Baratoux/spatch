@@ -1,7 +1,7 @@
 import os
 import sys
 
-from admin import commands
+from splatch import commands
 
 
 def usage():

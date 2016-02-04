@@ -1,5 +1,5 @@
 import database
-from admin.cmdparse import CommandParser
+from splatch.cmdparse import CommandParser
 
 commands = CommandParser(alias={
     'hostname': '(?:\w+)',
@@ -28,9 +28,9 @@ def delete_server(hostname):
 
 
 @commands.register("^new user (username) (filename)$")
-def new_user(username):
+def new_user(username, filename):
     """create a new user by name and public key filename"""
-    return database.new_user(username)
+    return database.new_user(username, filename)
 
 
 @commands.register("^delete user (username)$")
@@ -51,7 +51,6 @@ def revoke_access(username, hostname):
     return database.revoke_access(username, hostname)
 
 
-@commands.register("^has (username) access to (hostname)$")
 @commands.register("^(username) has access to (hostname)$")
 def access_granted(username, hostname):
     """return whether a user has access to an existing server"""

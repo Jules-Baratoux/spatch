@@ -120,7 +120,7 @@ def revoke_access(username, hostname):
     assert isinstance(username, str)
     assert isinstance(hostname, str)
     server = _get('servers', hostname)
-    server[username] = False
+    server.alias_by_username[username] = None
     _update('servers', hostname, server)
     # print "revoke_access(%r, %r)" % (username, hostname)
 

@@ -2,7 +2,7 @@
 import os
 
 from behave import *
-import splatch as admin
+import splatch
 
 
 def python(command):
@@ -10,7 +10,7 @@ def python(command):
 
 
 def script(command):
-    return python("%s %s" % (os.path.dirname(admin.__file__), command))
+    return python("%s %s" % (os.path.dirname(splatch.__file__), command))
 
 
 @given('a username public key pair')
@@ -32,7 +32,7 @@ def step_impl(context):
 
 @given('the server exists')
 def step_impl(context):
-    script('new server %s' % context.hostname)
+    script('new server %s %s' % (context.hostname, context.port))
 
 
 @given('the database is reset')
@@ -53,7 +53,7 @@ def grant_access(context):
 
 @then('the user has access to the server')
 def step_impl(context):
-    assert script('has %s access to %s' % (context.username, context.hostname)) == 0
+    assert script('%s has access to %s' % (context.username, context.hostname)) == 0
 
 
 @given('the user has access to the server')
@@ -63,7 +63,7 @@ def step_impl(context):
 
 @then('the user does not have access to the server')
 def step_impl(context):
-    assert script('has %s access to %s' % (context.username, context.hostname)) == 1
+    assert script('%s has access to %s' % (context.username, context.hostname)) == 1
 
 
 @when('I revoke the user access from the server')
