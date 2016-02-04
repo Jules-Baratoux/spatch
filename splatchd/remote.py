@@ -67,10 +67,9 @@ class RemoteSSHClient(object):
         channel = self._transport.open_session()
         return channel
 
-    def __del__(self):
-        if self._transport:
-            print "closing connection"
-            self._transport.close()
+    # def __del__(self):
+    #     print "closing connection"
+    #     self._transport.close()
 
 
 REMOTE_HOST_ADDRESS = list([
@@ -93,24 +92,29 @@ if __name__ == "__main__":
     remote_hosts = []
     try:
         for rhost in REMOTE_HOST_ADDRESS:
-            print "Connecting to %s on port %d" % (rhost['hostname'], rhost['port'])
+            print "Connecting to %s on port %d" % (rhost['hostname'],
+                                                   rhost['port'])
             hsock = RemoteSSHClient(rhost['username'], rhost['hostname'],
-                                       rhost['port'])
+                                    rhost['port'])
             if hsock.is_active():
                 print "connected"
                 remote_hosts.append(hsock)
             else:
-                print "failed to connect %s%d" % (rhost['hostnmae'], rhost['port'])
-    except KeyError:
+                print "failed to connect %s on port %d" % (rhost['hostname'],
+                                                           rhost['port'])
+    except KeyError as e:
         raise Exception("config error")
     except Exception as e:
         print e
-        raise e
     finally:
+        pass
         for rhost in remote_hosts:
             # get the socket
             if rhost.is_active():
                 channel = rhost.start_session()
+                print "Opened channel %s" % channel
+                channel = rhost.start_session()
+                print "Opened channel %s" % channel
                 # do something with socket
                 channel.close()  # close it
     # c.start()
