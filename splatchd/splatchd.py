@@ -8,6 +8,9 @@ from binascii import hexlify
 
 from paramiko.py3compat import b, u, decodebytes
 
+import termios
+import tty
+
 
 def load_host_key(filename='/home/jack/.ssh/id_rsa'):
     return paramiko.RSAKey(filename=filename)
@@ -36,6 +39,11 @@ class SplatchServer(paramiko.ServerInterface):
         if (username == 'jack') and (password == 'foo'):
             return paramiko.AUTH_SUCCESSFUL
         return paramiko.AUTH_FAILED
+
+    def check_auth_interactive(self, username, submethods):
+        
+        print username
+        return paramiko.AUTH_FAILED
     
     def check_auth_publickey(self, username, key):
         print('Auth attempt with key: ' + u(hexlify(key.get_fingerprint())))
@@ -43,30 +51,44 @@ class SplatchServer(paramiko.ServerInterface):
             return paramiko.AUTH_SUCCESSFUL
         return paramiko.AUTH_FAILED
         
-    def check_auth_gssapi_keyex(self, username,
-                                gss_authenticated=paramiko.AUTH_FAILED,
-                                cc_file=None):
-        if gss_authenticated == paramiko.AUTH_SUCCESSFUL:
-            return paramiko.AUTH_SUCCESSFUL
-        return paramiko.AUTH_FAILED
-        
-    def enable_auth_gssapi(self):
-        UseGSSAPI = True
-        GSSAPICleanupCredentials = False
-        return UseGSSAPI
-        
     def get_allowed_auths(self, username):
-        return 'gssapi-keyex,gssapi-with-mic,password,publickey'
+        return 'password, keyboard-interactive'
         
     def check_channel_shell_request(self, channel):
         self.event.set()
         return True
-        
+    
     def check_channel_pty_request(self, channel,
                                   term, width, height, pixelwidth,
                                   pixelheight, modes):
         return True
-    
+
+
+class ClientServer:
+
+    def __init__(self, socket, address):
+
+        self._socket = socket
+        self._hostname = address[0]
+        self._port = address[1]
+        try:
+            self._transport = paramiko.Transport(self._socket)
+
+            self._transport.add_server_key(load_host_key())
+            self._server = SplatchServer()
+
+            self._transport.start_server(server=self._server)
+        except paramiko.SSHException:
+            raise Exception("ssh negotiation failed.")
+        except:
+            raise Exception("failed to init client")
+        
+    def get_channel(self, timeout=3):
+        channel = self._transport.accept(timeout)
+        if channel is None:
+            raise Exception("no channel opened. timeout...")
+        return channel
+
 if __name__ == "__main__":
 
     try:
@@ -85,50 +107,19 @@ if __name__ == "__main__":
 
     rlist = [srv_sock]
 
-    # remote = paramiko.SSHClient()
-    
     while True:
-
         r, w, x = select.select(rlist, [], [])
+
+        if srv_sock in r:
+            client_sock, client_addr = srv_sock.accept()
+            print "connection from %s on %d" % (client_addr[0], client_addr[1])
+            try:
+                client = ClientServer(client_sock, client_addr)
+                channel = client.get_channel(3)
+                # do stuff
+                channel.close()
+            except Exception as e:
+                print "Failed to connect client"
+                # Client()
+        # else do other socket stuff
         
-        client_sock, client_addr = srv_sock.accept()
-
-        print "connection %s : %d" % (client_addr[0], client_addr[1])
-        try:
-            if srv_sock in r:
-
-                print "Request"
-                # client(transport, channel)
-                transport = paramiko.Transport(client_sock, gss_kex=False)
-                transport.load_server_moduli()
-                transport.add_server_key(load_host_key())
-                transport.start_server(server=SplatchServer())
-                print transport.is_active()
-                channel = transport.accept(20)
-                if channel is None:
-                    print "No channel"
-
-                rlist.append(channel)
-                print "Authenticated!"
-                channel.send("Please select a server:")
-            else:
-                print "TEST"
-                # for channel in r:
-                
-                # if remote_chan is None:
-                #     print "Rejected"
-                # print channel
-            
-                
-            
-            # transport.request_port_forward('192.168.1.72', 8000)
-            # # transport.open_forwarded_tcpip_channel(
-            # #     ('localhost', 6000), ('192.168.1.72', 8000)) 
-            # # transport.open_channel("forwarded-tcpip",
-            # #                        dest_addr=('192.168.1.72', 8000),
-            # #                        src_addr=('localhost', 2200))
-            
-        except Exception as e:
-            print e
-            traceback.print_exc()
-            sys.exit(1)
