@@ -2,9 +2,7 @@ import shelve
 
 from os import path
 
-from splatchd.models import User
-
-from splatchd.models import Server
+from models import User, Server
 
 
 class Cache(object):
