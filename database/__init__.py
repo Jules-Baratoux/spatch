@@ -138,4 +138,46 @@ def access_granted(username, hostname):
         return server.alias_by_username[username]
     except KeyError:
         return None
-    # print "access_granted(%r,%r) -> %s" % (username, hostname, result)
+        # print "access_granted(%r,%r) -> %s" % (username, hostname, result)
+
+
+def user(username):
+    """ Given a username, return stored a User instance
+    :param username: the user's name
+    :return: User instance
+    """
+    return _get('users', username)
+
+
+def public_key_filename(username):
+    """ Given a username, returns a user's public key filename
+    :param username: the user's name
+    :return: filename
+    """
+
+
+def _get_table(table):
+    try:
+        return cache[table]
+    except KeyError:
+        cache[table] = table = {}
+        return table
+
+
+def granted_servers(username):
+    """ Given a username, return a list 3-tuple representing servers' informations based on user's permissions
+    :param username: the user's name
+    :return: [(hostname, port, alias), ...]
+    """
+    result = list()
+    servers = _get_table('servers')
+    for hostname, server in servers.iteritems():
+        try:
+            alias = server.alias_by_username[username]
+        except KeyError:
+            continue
+        else:
+            item = (hostname, server.port, alias)
+            result.append(item)
+    return result
+

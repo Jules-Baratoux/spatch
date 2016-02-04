@@ -2,6 +2,8 @@
 import os
 
 from behave import *
+
+import database
 import splatch
 
 
@@ -16,7 +18,7 @@ def script(command):
 @given('a username public key pair')
 def step_impl(context):
     context.username = 'user%i' % id(context)
-    context.pubkey = 'pub%i' % id(context)
+    context.public_key_filename = 'pub%i' % id(context)
 
 
 @given('an alias')
@@ -43,7 +45,7 @@ def step_impl(context):
 
 @given('the user exists')
 def step_impl(context):
-    script('new user %s %s' % (context.username, context.pubkey))
+    script('new user %s %s' % (context.username, context.public_key_filename))
 
 
 @when('I grant the user access to the server')
@@ -69,3 +71,32 @@ def step_impl(context):
 @when('I revoke the user access from the server')
 def step_impl(context):
     script('revoke %s access from %s' % (context.username, context.hostname))
+
+
+@when('I access the user by name')
+def step_impl(context):
+    context.result = database.user(context.username)
+
+
+@then('a valid User instance is returned')
+def step_impl(context):
+    assert context.result.username == context.username
+    assert context.result.public_key_filename == context.public_key_filename
+
+
+@when("I request the user's granted_servers list")
+def step_impl(context):
+    context.result = database.granted_servers(context.username)
+
+
+@then("a valid list is returned")
+def step_impl(context):
+    hostname, port, alias = context.result[0]
+    assert hostname == context.hostname
+    assert port == context.port
+    assert alias == context.alias
+
+
+@then("an empty list is returned")
+def step_impl(context):
+    assert len(context.result) == 0
