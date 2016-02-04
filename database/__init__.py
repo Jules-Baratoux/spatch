@@ -41,7 +41,6 @@ def call(method, table, message, contains, name, *args):
     except KeyError:
         tmp = cache[table] = {}
 
-    assert isinstance(name, str)
     assert (name in tmp) == contains, message
     result = getattr(tmp, method)(name, *args)
     cache[table] = tmp
@@ -104,8 +103,6 @@ def grant_access(username, hostname, alias):
     :param hostname: the server's hostname
     :param alias: the username used on the server
     """
-    assert isinstance(username, str)
-    assert isinstance(hostname, str)
     server = _get('servers', hostname)
     server.alias_by_username[username] = alias
     _update('servers', hostname, server)
@@ -117,8 +114,6 @@ def revoke_access(username, hostname):
     :param username: the user's name
     :param hostname: the server's hostname
     """
-    assert isinstance(username, str)
-    assert isinstance(hostname, str)
     server = _get('servers', hostname)
     server.alias_by_username[username] = None
     _update('servers', hostname, server)
@@ -131,8 +126,6 @@ def access_granted(username, hostname):
     :param hostname: the server's hostname
     :return: str if granted else None
     """
-    assert isinstance(username, str)
-    assert isinstance(hostname, str)
     server = _get('servers', hostname)
     try:
         return server.alias_by_username[username]
