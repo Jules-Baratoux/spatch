@@ -27,7 +27,7 @@ class ClientServer:
         self._port = address[1]
         try:
             self._transport = paramiko.Transport(self._socket)
-
+            
             self._transport.add_server_key(load_host_key())
             self._server = ServerHandler()
 
@@ -39,13 +39,14 @@ class ClientServer:
         
     def get_channel(self, timeout=3):
         channel = self._transport.accept(timeout)
+
         if channel is None:
             raise Exception("no channel opened. timeout...")
+        if self._server.wait_for_event() is False:
+            raise Exception("client did not ask for shell.")
         return channel
-
     
 if __name__ == "__main__":
-    
     try:
         LOG.info("creating socket...")
         srv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -74,9 +75,12 @@ if __name__ == "__main__":
                                                               client_addr[1]))
             try:
                 client = ClientServer(client_sock, client_addr)
-                channel = client.get_channel(3)
+                channel = client.get_channel(20)
+                
+                rlist.append(channel)
+                # client.wait_for_shell_request()
+                # if not 
                 # do stuff
-                # channel.close()
             except Exception as e:
                 LOG.error("client failed to connect %s" % e)
                 # Client()
