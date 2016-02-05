@@ -5,6 +5,7 @@ import threading
 from binascii import hexlify
 
 import paramiko
+from select import select
 from paramiko import SSHException
 from paramiko.py3compat import u, decodebytes
 
@@ -93,19 +94,49 @@ class SSHServer(paramiko.ServerInterface):
         return True
 
 
-class SSHConnection(object):
+class SSHClientConnection(object):
 
     def __init__(self, transport, channel, socket, address):
+        try:
+            # socket is the TCP socket connected to the client
+            # channel.send('\r\n\r\nWelcome to my dorky little BBS!\r\n\r\n')
+            # channel.send('We are on fire all the time!  Hooray!  Candy corn for everyone!\r\n')
+            # channel.send('Happy birthday to Robot Dave!\r\n\r\n')
+            # channel.send('Username: ')
+            # f = channel.makefile('rU')
+            # username = f.readline().strip('\r\n')
+            # channel.send('\r\nI don\'t like you, ' + username + '.\r\n')
 
-        # socket is the TCP socket connected to the client
-        channel.send('\r\n\r\nWelcome to my dorky little BBS!\r\n\r\n')
-        channel.send('We are on fire all the time!  Hooray!  Candy corn for everyone!\r\n')
-        channel.send('Happy birthday to Robot Dave!\r\n\r\n')
-        channel.send('Username: ')
-        f = channel.makefile('rU')
-        username = f.readline().strip('\r\n')
-        channel.send('\r\nI don\'t like you, ' + username + '.\r\n')
-        channel.close()
+            self.client_channel = channel
+            self.server_channel = ← connect to the end-point server channel and store it
+
+        except:
+            raise
+        finally:
+            channel.close() ← do not forget to close when the connection is not needed anymore
+
+    def readable(self, channel):
+
+        if channel is self.client_channel:
+            self.client_server.buffer += self.client_channel.recv(BUFSIZE)
+        else:
+            message = self.client_channel.recv(BUFSIZE)
+
+        message = i.recv(BUFSIZE)
+        return o.send(message)
+
+    def writable(self, channel):
+
+        if channel is self.client_channel:
+            i = channel
+            o = self.server_channel
+        else:
+            i = self.server_channel
+            o = channel
+
+        message = i.recv(BUFSIZE)
+        return o.send(message)
+
 
 
 ssh_server = SSHServer()
@@ -139,14 +170,30 @@ class SSHHandler(SocketServer.BaseRequestHandler):
         if not ssh_server.event.is_set():
             raise RuntimeError('no shell request: timeout after %is' % SHELL_REQUEST_TIMEOUT)
 
-        connection = SSHConnection(transport, channel, self.request, self.client_address)
+        channel.connection = SSHClientConnection(transport, channel, self.request, self.client_address)
+        self.server.inputs.append(channel)
+        self.server.outputs.append(channel)
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
+    HOST, PORT = "localhost", 9998
 
     # Create the server, binding to localhost on port 9999
     server = SocketServer.TCPServer((HOST, PORT), SSHHandler)
 
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
-    server.serve_forever()
+
+    server.inputs  = [server.socket]
+    server.outputs = []
+    message_queues = {}
+    while server.inputs:
+        readable, writable, exceptional = select(server.inputs, server.outputs, server.inputs)
+        for s in readable:
+            if s is server.socket:
+                channel = server.handle_request()
+                pass
+           else:
+               channel.connection.readable(channel)
+
+    server.server_close()
+
