@@ -31,7 +31,6 @@ class ServerHandler(paramiko.ServerInterface):
 
     def __init__(self):
         self._allowed_auths = ['keyboard-interactive']
-
         self._shell_request_event = threading.Event()
         
     def get_allowed_auths(self, username):
@@ -49,8 +48,9 @@ class ServerHandler(paramiko.ServerInterface):
         return query_server_selection(self._granted)
 
     def check_auth_interactive_response(self, responses):
-        for host, _, alias in self._granted:
+        for host, port, alias in self._granted:
             if host == responses[0]:
+                self.remote_address= (host, port, alias)
                 self._allowed_auths = ['publickey']
                 return paramiko.AUTH_PARTIALLY_SUCCESSFUL
         # self._allowed_auths = []
@@ -63,7 +63,6 @@ class ServerHandler(paramiko.ServerInterface):
             assert os.path.exists(pub_key_filename)
             with open(pub_key_filename, 'rb') as pubkey:
                 pubkey_data = pubkey.read().split(' ')[1]
-
         except paramiko.SSHException as e:
             LOG.error(e)
             return paramiko.AUTH_FAILED

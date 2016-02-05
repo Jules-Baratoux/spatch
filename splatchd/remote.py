@@ -8,7 +8,7 @@ import tty, termios
 DEFAULT_KEY_PATH = "./keys/splatch"
 
 
-class RemoteSSHClient(object):
+class SSHRemoteClient(object):
     
     def __init__(self, username, raddress):
 
@@ -36,7 +36,7 @@ class RemoteSSHClient(object):
             print "socket timed out."
             self._active = False
         except Exception as e:
-            print e
+            raise e
         
     @classmethod
     def is_known(cls, key):
@@ -59,7 +59,7 @@ class RemoteSSHClient(object):
             if not self._transport.is_authenticated():
                 raise Exception("faield to authenticate")
 
-    def start_session(self):
+    def get_channel(self):
         channel = self._transport.open_session()
         return channel
 
