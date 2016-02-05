@@ -10,8 +10,6 @@ logging.basicConfig(format='[%(levelname)-7s]::[%(name)-20s] %(message)s',
                     level=logging.DEBUG)
 
 LOG = logging.getLogger('spatch')
-# from binascii import hexlify
-# from paramiko.py3compat import b, u, decodebytes
 
 
 def load_host_key(filename='/home/jack/.ssh/id_rsa'):
@@ -37,7 +35,7 @@ class ClientServer:
         except:
             raise Exception("failed to init client")
         
-    def get_channel(self, timeout=3):
+    def get_client_channel(self, timeout=3):
         channel = self._transport.accept(timeout)
 
         if channel is None:

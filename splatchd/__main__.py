@@ -1,10 +1,12 @@
+import sys
+
 import SocketServer
 import logging
-import socket
-from paramiko.py3compat import u
-import threading
-import paramiko
 from select import select
+
+import paramiko
+from paramiko.py3compat import u
+
 
 from remote import SSHRemoteClient
 from server_handler import ServerHandler
@@ -17,22 +19,24 @@ logging.basicConfig(
 LOG = logging.getLogger('spatch')
 
 BUFSIZE = 1024
-DO_GSS_API_KEY_EXCHANGE = True
-DOMAIN_NAME = ""
-RSAKEY = paramiko.RSAKey(filename='keys/splatch')
-TRANSPORT_ACCEPT_TIMEOUT = 20  # None == no timeout
-SHELL_REQUEST_TIMEOUT = 10  # After authentication
+# DO_GSS_API_KEY_EXCHANGE = True
+# DOMAIN_NAME = ""
+# RSAKEY = paramiko.RSAKey(filename='keys/splatch')
+# TRANSPORT_ACCEPT_TIMEOUT = 20  # None == no timeout
+# SHELL_REQUEST_TIMEOUT = 10  # After authentication
 
 
 class SSHClientConnection(object):
 
-    def __init__(self, sock):
+    def __init__(self, sock, rsakey):
         self._socket = sock
         # self._client_address
         try:
             self._transport = paramiko.Transport(self._socket)
+
+            rsakey = paramiko.RSAKey(filename=rsakey)
             
-            self._transport.add_server_key(RSAKEY)
+            self._transport.add_server_key(rsakey)
             self._server = ServerHandler()
             self._transport.start_server(server=self._server)
         except paramiko.SSHException:
@@ -58,9 +62,9 @@ class SSHHandler(SocketServer.BaseRequestHandler):
     def handle(self):
 
         try:
-            print "TEST"
-            client = SSHClientConnection(self.request)
-            client_channel = client.get_channel(10)    
+            
+            client = SSHClientConnection(self.request, sys.argv[2])
+            client_channel = client.get_channel(10)
             rhost, rport, alias = client.get_remote_address()
 
             rport = int(rport)
@@ -101,7 +105,10 @@ class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     pass
 
 if __name__ == "__main__":
-    import sys
+
+    if len(sys.argv) != 3:
+        print "Usage: splatchd <port> <keyfile>"
+        sys.exit(1)
     HOST, PORT = "localhost", int(sys.argv[1])
 
     # Create the server, binding to localhost on port 9999
@@ -113,4 +120,4 @@ if __name__ == "__main__":
     server.serve_forever()
     server.shutdown()
     server.server_close()
-
+    sys.exit(0)
