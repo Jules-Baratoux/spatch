@@ -2,7 +2,7 @@ import SocketServer
 import logging
 import socket
 from paramiko.py3compat import u
-
+import threading
 import paramiko
 from select import select
 
@@ -37,7 +37,7 @@ class SSHClientConnection(object):
             self._transport.start_server(server=self._server)
         except paramiko.SSHException:
             raise RuntimeError("ssh negotiation failed.")
-        except Exception as e:
+        except Exception:
             raise RuntimeError("failed to init client")
 
     def get_channel(self, timeout=3):
@@ -58,50 +58,47 @@ class SSHHandler(SocketServer.BaseRequestHandler):
     def handle(self):
 
         try:
+            print "TEST"
             client = SSHClientConnection(self.request)
-            cl_channel = client.get_channel(10)
-
+            client_channel = client.get_channel(10)    
             rhost, rport, alias = client.get_remote_address()
 
             rport = int(rport)
-            alias = 'user'
             LOG.info("connecting to remote endpoint on %s %d" % (rhost, rport))
 
             endpoint = SSHRemoteClient(alias, (rhost, rport))
-            if endpoint.is_active():
-                ep_channel = endpoint.get_channel()
-                ep_channel.get_pty()
-                ep_channel.invoke_shell()
+            endpoint_channel = endpoint.get_channel()
+            if not endpoint.is_active():
+                raise RuntimeError("Could not get endpoint channel")
                 
-                LOG.info("connected to endpoint channel.")
+            LOG.info("connected to endpoint channel.")
+            endpoint_channel.get_pty()
+            endpoint_channel.invoke_shell()
 
-            # import 
-                
             while True:
-                r, w, e = select([cl_channel, ep_channel], [], [])
-                if cl_channel in r:
-                    data = u(cl_channel.recv(1024))
+                r, w, e = select([client_channel, endpoint_channel], [], [])
+                if client_channel in r:
+                    data = u(client_channel.recv(1024))
                     if len(data) == 0:
                         LOG.info("lost connection to client.")
                         break
-                    ep_channel.send(data)
-                elif ep_channel in r:
-                    data = u(ep_channel.recv(1024))
+                    endpoint_channel.send(data)
+                elif endpoint_channel in r:
+                    data = u(endpoint_channel.recv(1024))
                     if len(data) == 0:
                         LOG.info("lost connection to endpoint.")
                         break
-                    cl_channel.send(data)
+                    client_channel.send(data)
+            client_channel.close()
+            endpoint_channel.close()
 
-
-            # self.server.inputs.extend([cl_channel, ep_channel])
-            # self.server.outputs.extend([cl_channel, ep_channel])
-            
         except Exception as e:
             LOG.exception(e)
-            cl_channel.close()
-            ep_channel.close()
             raise RuntimeWarning("Failed to connect client")
-        
+
+
+class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
+    pass
 
 if __name__ == "__main__":
     import sys
@@ -109,10 +106,11 @@ if __name__ == "__main__":
 
     # Create the server, binding to localhost on port 9999
     LOG.info("Creating %d port on %s" % (PORT, HOST))
-    server = SocketServer.TCPServer((HOST, PORT), SSHHandler)
+    server = ThreadedTCPServer((HOST, PORT), SSHHandler)
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
 
     server.serve_forever()
+    server.shutdown()
     server.server_close()
 
