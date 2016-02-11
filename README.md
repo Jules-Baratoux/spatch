@@ -15,33 +15,23 @@ Users      Proxy server    End points
 2. Deploy and run `sshd` on remote servers
 
 ### User creation
-1. Register a remote server
-```bash
-$> spatch new server <host> <port> 
-```
-2. Create a spatch user
-```bash
-$> spatch new user <username> <user-rsa-public-key-filename> 
-```
-3. Grant access to a user on a remote server
-```bash
-$> grant <username> access to  <host> as <remote-username>
-```
-From now on, a user given by `username` connecting to the spatch server with the specified *rsa-public-key* is able to connect to `host` using **ssh** as `remote-username`.
+1. Register a remote server  
+ `$> spatch new server <host> <port>`
+2. Create a spatch user  
+ `$> spatch new user <username> <user-rsa-public-key-filename>`
+3. Grant access to a user on a remote server  
+ `$> grant <username> access to  <host> as <remote-username>`  
+ From now on, a user given by `username` connecting to the spatch server with the specified *rsa-public-key* is able to connect to `host` using **ssh** as `remote-username`.
 
 ### User connection
-1. Connect to spatch proxy server using any regular **ssh** client
-```bash
-$> ssh <username>@<spatch-host> -p <spatch-port> 
-```
-2. When prompted, select a <host> to connect to
-3. You are now connected to the <remote-server-hostname>
+1. Connect to spatch proxy server using any regular **ssh** client  
+ `$> ssh <username>@<spatch-host> -p <spatch-port>`
+2. When prompted, select a `host` to connect to
+3. You are now connected to the `host`
 
 ### Further help
-Run `spatch` without specifying any command to get a full list of commands
-```bash
- $> spatch
-```
+Run `spatch` without specifying any command to get a full list of commands  
+`$> spatch`
 
    [@jules]: <github.com/Jules-Baratoux>
    [@jack]: <github.com/Liek0s>
