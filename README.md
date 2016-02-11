@@ -11,8 +11,8 @@ Users      Proxy server    End points
 ```
 
 ### Installation
-1. As a privileged user, deploy and run `spatchd` on the proxy server
-2. Deploy and run `sshd` on remote servers
+1. As a privileged user, deploy and start `spatchd` on the proxy server
+2. Deploy and start `sshd` on remote servers
 
 ### User creation
 1. Register a remote server  
