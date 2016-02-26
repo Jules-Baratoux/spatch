@@ -37,7 +37,7 @@ usage:
     spatch <command>
 
 commands:
-    new server <hostname> (port-number)               -- create a new server by name and port
+    new server <hostname> <port>                      -- create a new server by name and port
     delete server <hostname>                          -- delete an existing server by name
     new user <username> <filename>                    -- create a new user by name and public key filename
     delete user <username>                            -- delete an existing user by name
